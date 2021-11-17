@@ -36,6 +36,8 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         self.listday = 0
         self.listnum = 15
         self.actMedias = []
+        self.dayarr = [{'title':'全部'},{'title':'周一'},{'title':'周二'},{'title':'周三'},{'title':'周四'},{'title':'周五'},{'title':'周六'},{'title':'周日'}]
+        self.zfarr = [{'title':'追番列表'}]
 
     
     def start(self):
@@ -130,7 +132,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         file = open('cartoon_source.json', "rb")
         fileJson = json.loads(file.read())
         n = 0
-        ins = "INSERT INTO medialist(id, day, name, detail, pic) VALUES (?,?,?,?,?)"
+        ins = "insert or ignore INTO medialist(id, day, name, detail, pic) VALUES (?,?,?,?,?)"
         cur = self.dbconn.cursor()
         for item in fileJson:
             cur.execute(ins, (n,item['update_day'],item['name'],item['info'],item['picture']))
@@ -212,8 +214,13 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         
     def getMediaInfo(self,url,vid,gettype):
         apiurl = url + '?ac=videolist&ids=' + str(vid)
-        res = requests.get(apiurl,timeout = 2,verify = False)
-        if res.status_code == 200:
+        rescode = 0
+        try:
+            res = requests.get(apiurl,timeout = 2,verify = False)
+            rescode = res.status_code
+        except:
+            rescode = -100
+        if  rescode == 200:
             if gettype == 'json':
                 jsondata = json.loads(res.text, strict = False)
                 if jsondata:
@@ -277,7 +284,6 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         self.doModal('main',800,700,'',controls)        
     
     def makeLayout(self):
-        dayarr = [{'title':'全部'},{'title':'周一'},{'title':'周二'},{'title':'周三'},{'title':'周四'},{'title':'周五'},{'title':'周六'},{'title':'周日'}]
         day_layout = [
             {'type':'link','name':'title','@click':'onDayMenuClick'}
         ]
@@ -305,7 +311,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
                 'height':25
             },
             {'type':'space','height':10},
-            {'type':'grid','name':'daygrid','itemlayout':day_layout,'value':dayarr,'itemheight':30,'itemwidth':80,'height':25},
+            {'type':'grid','name':'daygrid','itemlayout':day_layout,'value':self.dayarr,'itemheight':30,'itemwidth':80,'height':25},
             {'type':'space','height':5},
             {'type':'grid','name':'mediagrid','itemlayout':mediagrid_layout,'value':self.actMedias,'separator':True,'itemheight':240,'itemwidth':150},
             {'group':
@@ -376,6 +382,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         self.createMediaFrame(mediainfo)
     
     def on_grid_select(self, page, listControl, item, itemControl):
+        print('on_grid_select')
         newSelected = True;
         if self.actMedias[item]['追番'] == '1':
             self.actMedias[item]['追番'] = '0'
@@ -385,7 +392,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         cur = self.dbconn.cursor()
         if newSelected:
             newitem = (self.actMedias[item]['id'],self.actMedias[item]['title'],self.actMedias[item]['info'],self.actMedias[item]['picture'],-1)
-            cur.execute('insert into selected (id,name, detail, pic, watched) VALUES (?,?,?,?,?)', newitem)
+            cur.execute('insert or ignore into selected (id,name, detail, pic, watched) VALUES (?,?,?,?,?)', newitem)
             print('insert selected id:' + str(self.actMedias[item]['id']))
         else:
             cur.execute('delete from selected where id = ' + str(self.actMedias[item]['id']))
@@ -409,11 +416,11 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         controls = [
             {'type':'space','height':5},
             {'group':[
-                    {'type':'image','name':'mediapicture', 'value':mediainfo['picture'],'width':0.25},
+                    {'type':'image','name':'mediapicture', 'value':mediainfo['picture'],'width':150},
                     {'group':[
                             {'type':'label','name':'medianame','textColor':'#ff7f00','fontSize':15,'value':mediainfo['medianame'],'height':40},
                             {'type':'label','name':'info','textColor':'#005555','value':mediainfo['info'],'vAlign':'top'},
-                            {'type':'label','name':'userwatched','textColor':'#550055','value':mediainfo['watched'],'vAlign':'top','height':40}
+                            {'type':'label','name':'userwatched','textColor':'#550055','value':mediainfo['watched'],'vAlign':'top','height':30}
                         ],
                         'dir':'vertical',
                         'width':0.75
@@ -462,7 +469,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
             self.pagenumbers = self.getPageNumbers()
             self.max_page = '共' + str(self.pagenumbers) + '页'
             self.cur_page = '第' + str(self.pageindex) + '页'
-            self.player.updateControlValue('main','mediagrid',self.actMedias)
+            self.player.updateControlValue('main','mediagrid',self.actMedias)           
             self.loading(True)
         
     def reloadDayList(self):
@@ -472,7 +479,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
             if self.listday > 0:
                 sqlstr = sqlstr + 'where day = ' + str(self.listday)
         else:
-            sqlstr = 'select id,name,detail,pic,flag from selected'
+            sqlstr = 'select id,name,detail,pic,1 from selected'
         startnum = (self.pageindex  - 1) * self.listnum
         endmum = self.pageindex * self.listnum
         sqlstr = sqlstr + ' limit ' + str(startnum) + ',' + str(endmum)
@@ -481,6 +488,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         cur.execute(sqlstr)
         for row in cur:
             newintem = {'id':row[0],'title':row[1],'info':row[2],'picture':row[3],'追番':str(row[4])}
+            print(newintem)
             self.actMedias.append(newintem)
         self.pageindex = 1
         maxmedias = len(self.actMedias)
@@ -492,31 +500,34 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
     def onDayListClick(self, page, Control):
         if self.daylist == False:
             self.daylist = True
-        self.pageindex = 1
+        self.player.updateControlValue('main','daygrid',self.dayarr) 
         self.loading()
         self.pageindex = 1
         self.actMedias = self.getSourceOfDay(0)
         self.pagenumbers = self.getPageNumbers()
         self.max_page = '共' + str(self.pagenumbers) + '页'
+        self.cur_page = '第' + str(self.pageindex) + '页'
         self.player.updateControlValue('main','mediagrid',self.actMedias)
         self.loading(True)
     
     def onSelectClick(self, page, Control):
         if self.daylist:
             self.daylist = False
-        self.pageindex = 1
+        self.player.updateControlValue('main','daygrid',self.zfarr) 
         self.loading()
         self.pageindex = 1
         self.actMedias = self.getSourceOfDay(0)
         self.pagenumbers = self.getPageNumbers()
         self.max_page = '共' + str(self.pagenumbers) + '页'
+        self.cur_page = '第' + str(self.pageindex) + '页'
         self.player.updateControlValue('main','mediagrid',self.actMedias)
         self.loading(True)
                 
     def reLoadMedias(self):
-        if self.daylist:
-            self.actMedias = self.getSourceOfDay(self.listday)
-            self.player.updateControlValue('main','mediagrid',self.actMedias)
+        self.actMedias = self.getSourceOfDay(self.listday)
+        self.player.updateControlValue('main','mediagrid',self.actMedias)
+        self.max_page = '共' + str(self.pagenumbers) + '页'
+        self.cur_page = '第' + str(self.pageindex) + '页'
         
     def onClickFirstPage(self, *args):
         self.pageindex = 1
