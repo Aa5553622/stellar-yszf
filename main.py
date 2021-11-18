@@ -294,7 +294,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
                     'group': [
                         {'type':'image','name':'picture', '@click':'on_grid_click'},
                         {'type':'link','name':'title','textColor':'#ff7f00','height':20, '@click':'on_grid_click'},
-                        {'type':'check','name':'追番','textColor':'#ff0f00','height':20,'@click':'on_grid_select'}
+                        #{'type':'check','name':'追番','textColor':'#ff0f00','height':20,'@click':'on_grid_select'}
                     ],
                     'dir':'vertical'
                 }
@@ -306,7 +306,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
                 [
                     {'type':'space','width':10},
                     {'type':'link','name':'新番列表','@click':'onDayListClick'},
-                    {'type':'link','name':'追番列表','@click':'onSelectClick'}
+                    #{'type':'link','name':'追番列表','@click':'onSelectClick'}
                 ],
                 'height':25
             },
