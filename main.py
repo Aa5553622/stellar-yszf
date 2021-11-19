@@ -459,7 +459,10 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
             self.dbconn.commit()
             cur.close()
             self.saveSelected()
-            self.player.play(playurl)            
+            try:
+                self.player.play(playurl, caption=page)
+            except:
+                self.player.play(playurl)         
     
     def onDayMenuClick(self, page, listControl, item, itemControl):
         if self.daylist:
