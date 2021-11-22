@@ -410,7 +410,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
             actmovies = mediainfo['source'][0]['medias']
         medianame = mediainfo['medianame']
         strid = str(mediainfo['id'])
-        self.allmovidesdata[strid] = {'allmovies':mediainfo['source'],'actmovies':actmovies}
+        self.allmovidesdata[strid] = {'name':medianame,'allmovies':mediainfo['source'],'actmovies':actmovies}
         xl_list_layout = {'type':'link','name':'flag','textColor':'#ff0000','width':0.6,'@click':'on_xl_click'}
         movie_list_layout = {'type':'link','name':'title','@click':'on_movieurl_click'}
         controls = [
