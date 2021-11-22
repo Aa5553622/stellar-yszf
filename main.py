@@ -352,13 +352,14 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         allMediaUrls = []
         for row in cur:
             newlines = self.getMediaInfo(row[0],row[2],row[1])
-            for lines in newlines:
-                for medias in lines['medias']:
-                    searchsql = 'select count(*) from mediaurls where id = ' + strid + ' and flag = "' + lines['flag'] + '" and url = "' + medias['url'] +'"'
-                    cur2.execute(searchsql)
-                    if cur2.fetchone()[0] == 0:
-                        cur2.execute('insert into mediaurls (id, flag, title, url) VALUES (?,?,?,?)',(self.actMedias[item]['id'],lines['flag'],medias['title'],medias['url']));
-                    self.dbconn.commit()
+            if newlines:
+                for lines in newlines:
+                    for medias in lines['medias']:
+                        searchsql = 'select count(*) from mediaurls where id = ' + strid + ' and flag = "' + lines['flag'] + '" and url = "' + medias['url'] +'"'
+                        cur2.execute(searchsql)
+                        if cur2.fetchone()[0] == 0:
+                            cur2.execute('insert into mediaurls (id, flag, title, url) VALUES (?,?,?,?)',(self.actMedias[item]['id'],lines['flag'],medias['title'],medias['url']));
+                        self.dbconn.commit()
         cur.execute('select DISTINCT flag from mediaurls where id = ' + strid)
         infos = []
         for row in cur:
