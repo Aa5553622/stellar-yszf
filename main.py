@@ -431,7 +431,11 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
                 'height':250
             },
             {'group':
-                {'type':'grid','name':'xllist','itemlayout':xl_list_layout,'value':mediainfo['source'],'separator':True,'itemheight':30,'itemwidth':120},
+                [
+                    {'type':'space','width':10},
+                    {'type':'label','name':'xl','value':'线路','width':60},
+                    {'type':'grid','name':'xllist','itemlayout':xl_list_layout,'value':mediainfo['source'],'separator':True,'itemheight':30,'itemwidth':120}
+                ],
                 'height':40
             },
             {'type':'space','height':5},
@@ -450,17 +454,23 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
     def on_movieurl_click(self, page, listControl, item, itemControl):
         if len(self.allmovidesdata[page]['actmovies']) > item:
             playurl = self.allmovidesdata[page]['actmovies'][item]['url']
-            strwatched = self.allmovidesdata[page]['actmovies'][item]['title']
-            strwatched = '上次观看到 ' +  strwatched
-            self.player.updateControlValue(page,'userwatched',strwatched)
+            sqlstr = 'select * from selected where id = ' + page
             cur = self.dbconn.cursor()
-            sqlstr = 'update selected set watched = ' + str(item) + ' where id = ' + page
-            print(sqlstr)
-            cur.execute(sqlstr)
-            self.dbconn.commit()
+            c = cur.execute(sqlstr)
+            r = len(c.fetchall())
             cur.close()
-            self.saveSelected()
-            playname = self.allmovidesdata[page]['name'] + ' ' + strwatched
+            if r > 0:
+                cur = self.dbconn.cursor()
+                strwatched = self.allmovidesdata[page]['actmovies'][item]['title']
+                strwatched = '上次观看到 ' +  strwatched
+                self.player.updateControlValue(page,'userwatched',strwatched)
+                playname = self.allmovidesdata[page]['name'] + ' ' + strwatched
+                sqlstr = 'update selected set watched = ' + str(item) + ' where id = ' + page
+                print(sqlstr)
+                cur.execute(sqlstr)
+                self.dbconn.commit()
+                self.saveSelected()
+                cur.close()
             try:
                 self.player.play(playurl, caption=self.allmovidesdata[page]['name'])
             except:
