@@ -38,7 +38,7 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         self.actMedias = []
         self.dayarr = [{'title':'全部'},{'title':'周一'},{'title':'周二'},{'title':'周三'},{'title':'周四'},{'title':'周五'},{'title':'周六'},{'title':'周日'}]
         self.zfarr = [{'title':'追番列表'}]
-        self.activeVision = '20211124202644'
+        self.activeVision = '20211124193334'
         self.upvision = False
 
     
