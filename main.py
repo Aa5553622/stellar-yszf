@@ -38,6 +38,8 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         self.actMedias = []
         self.dayarr = [{'title':'全部'},{'title':'周一'},{'title':'周二'},{'title':'周三'},{'title':'周四'},{'title':'周五'},{'title':'周六'},{'title':'周日'}]
         self.zfarr = [{'title':'追番列表'}]
+        self.activeVision = '20211124202644'
+        self.upvision = False
 
     
     def start(self):
@@ -61,6 +63,8 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
         self.pagenumbers = self.getPageNumbers()
         self.max_page = '共' + str(self.pagenumbers) + '页'
         self.cur_page = '第' + str(self.pageindex) + '页'
+        if self.activeVision <= self.player.version:
+            self.upvision = True
         
     def getPageNumbers(self):
         cur = self.dbconn.cursor()
@@ -288,52 +292,102 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
             {'type':'link','name':'title','@click':'onDayMenuClick'}
         ]
 
-        mediagrid_layout = [
-            [
-                {
-                    'group': [
-                        {'type':'image','name':'picture', '@click':'on_grid_click'},
-                        {'type':'link','name':'title','textColor':'#ff7f00','height':20, '@click':'on_grid_click'},
-                        #{'type':'check','name':'追番','textColor':'#ff0f00','height':20,'@click':'on_grid_select'}
-                    ],
-                    'dir':'vertical'
-                }
-            ]
-        ]
-        controls = [
-            {'type':'space','height':5},
-            {'group':
+        mediagrid_layout = []
+        controls = []
+        if self.upvision:
+            mediagrid_layout = [
                 [
-                    {'type':'space','width':10},
-                    {'type':'link','name':'新番列表','@click':'onDayListClick'},
-                    #{'type':'link','name':'追番列表','@click':'onSelectClick'}
-                ],
-                'height':25
-            },
-            {'type':'space','height':10},
-            {'type':'grid','name':'daygrid','itemlayout':day_layout,'value':self.dayarr,'itemheight':30,'itemwidth':80,'height':25},
-            {'type':'space','height':5},
-            {'type':'grid','name':'mediagrid','itemlayout':mediagrid_layout,'value':self.actMedias,'separator':True,'itemheight':240,'itemwidth':150},
-            {'group':
-                [
-                    {'type':'space'},
-                    {'group':
-                        [
-                            {'type':'label','name':'cur_page',':value':'cur_page'},
-                            {'type':'link','name':'首页','@click':'onClickFirstPage'},
-                            {'type':'link','name':'上一页','@click':'onClickFormerPage'},
-                            {'type':'link','name':'下一页','@click':'onClickNextPage'},
-                            {'type':'link','name':'末页','@click':'onClickLastPage'},
-                            {'type':'label','name':'max_page',':value':'max_page'},
-                        ]
-                        ,'width':0.7
-                    },
-                    {'type':'space'}
+                    {
+                        'group': [
+                            {'type':'image','name':'picture', '@click':'on_grid_click'},
+                            {'type':'link','name':'title','textColor':'#ff7f00','height':20, '@click':'on_grid_click'},
+                            {'type':'check','name':'追番','textColor':'#ff0f00','height':20,'@click':'on_grid_select'}
+                        ],
+                        'dir':'vertical'
+                    }
                 ]
-                ,'height':30
-            },
-            {'type':'space','height':5}
-        ]
+            ]
+            controls = [
+                {'type':'space','height':5},
+                {'group':
+                    [
+                        {'type':'space','width':10},
+                        {'type':'link','name':'新番列表','@click':'onDayListClick'},
+                        {'type':'link','name':'追番列表','@click':'onSelectClick'}
+                    ],
+                    'height':25
+                },
+                {'type':'space','height':10},
+                {'type':'grid','name':'daygrid','itemlayout':day_layout,'value':self.dayarr,'itemheight':30,'itemwidth':80,'height':25},
+                {'type':'space','height':5},
+                {'type':'grid','name':'mediagrid','itemlayout':mediagrid_layout,'value':self.actMedias,'separator':True,'itemheight':240,'itemwidth':150},
+                {'group':
+                    [
+                        {'type':'space'},
+                        {'group':
+                            [
+                                {'type':'label','name':'cur_page',':value':'cur_page'},
+                                {'type':'link','name':'首页','@click':'onClickFirstPage'},
+                                {'type':'link','name':'上一页','@click':'onClickFormerPage'},
+                                {'type':'link','name':'下一页','@click':'onClickNextPage'},
+                                {'type':'link','name':'末页','@click':'onClickLastPage'},
+                                {'type':'label','name':'max_page',':value':'max_page'},
+                            ]
+                            ,'width':0.7
+                        },
+                        {'type':'space'}
+                    ]
+                    ,'height':30
+                },
+                {'type':'space','height':5}
+            ]
+        else:
+            mediagrid_layout = [
+                [
+                    {
+                        'group': [
+                            {'type':'image','name':'picture', '@click':'on_grid_click'},
+                            {'type':'link','name':'title','textColor':'#ff7f00','height':20, '@click':'on_grid_click'},
+                            #{'type':'check','name':'追番','textColor':'#ff0f00','height':20,'@click':'on_grid_select'}
+                        ],
+                        'dir':'vertical'
+                    }
+                ]
+            ]
+            controls = [
+                {'type':'space','height':5},
+                {'group':
+                    [
+                        {'type':'space','width':10},
+                        {'type':'link','name':'新番列表','@click':'onDayListClick'},
+                        #{'type':'link','name':'追番列表','@click':'onSelectClick'}
+                    ],
+                    'height':25
+                },
+                {'type':'space','height':10},
+                {'type':'grid','name':'daygrid','itemlayout':day_layout,'value':self.dayarr,'itemheight':30,'itemwidth':80,'height':25},
+                {'type':'space','height':5},
+                {'type':'grid','name':'mediagrid','itemlayout':mediagrid_layout,'value':self.actMedias,'separator':True,'itemheight':240,'itemwidth':150},
+                {'group':
+                    [
+                        {'type':'space'},
+                        {'group':
+                            [
+                                {'type':'label','name':'cur_page',':value':'cur_page'},
+                                {'type':'link','name':'首页','@click':'onClickFirstPage'},
+                                {'type':'link','name':'上一页','@click':'onClickFormerPage'},
+                                {'type':'link','name':'下一页','@click':'onClickNextPage'},
+                                {'type':'link','name':'末页','@click':'onClickLastPage'},
+                                {'type':'label','name':'max_page',':value':'max_page'},
+                            ]
+                            ,'width':0.7
+                        },
+                        {'type':'space'}
+                    ]
+                    ,'height':30
+                },
+                {'type':'space','height':5}
+            ]
         return controls
         
     def on_grid_click(self, page, listControl, item, itemControl):
