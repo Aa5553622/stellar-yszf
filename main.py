@@ -226,7 +226,11 @@ class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
             rescode = -100
         if  rescode == 200:
             if gettype == 'json':
-                jsondata = json.loads(res.text, strict = False)
+                jsondata = None
+                try:
+                    jsondata = json.loads(res.text, strict = False)
+                except:
+                    print('读取json数据失败')
                 if jsondata:
                     medialist = jsondata['list']
                     if len(medialist) > 0:
